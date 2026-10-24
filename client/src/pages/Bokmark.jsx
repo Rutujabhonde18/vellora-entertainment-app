@@ -21,8 +21,24 @@ export default function Bookmarks() {
         const response = await getBookmarks();
         const saved = response.bookmarks || [];
 
-        const updatedBookmarks = await Promise.all(
-          saved.map(async (item) => {
+        // Show saved items immediately using data from the backend.
+        const initialBookmarks = saved.map((item) => ({
+          ...item,
+          image: item.posterPath ? getImageUrl(item.posterPath) : "",
+        }));
+
+        if (active) {
+          setBookmarks(initialBookmarks);
+          setLoading(false);
+        }
+
+        // Fetch missing details in the background.
+        const missingDetails = saved.filter(
+          (item) => !item.title || !item.posterPath,
+        );
+
+        const updatedItems = await Promise.all(
+          missingDetails.map(async (item) => {
             try {
               const details =
                 item.mediaType === "tv"
@@ -39,21 +55,25 @@ export default function Bookmarks() {
                 image: getImageUrl(posterPath),
               };
             } catch (err) {
-              console.error(
-                `TMDB poster lookup failed for ${item.title}:`,
-                err,
-              );
-
-              return {
-                ...item,
-                image: item.posterPath ? getImageUrl(item.posterPath) : "",
-              };
+              console.error("Bookmark details failed:", err);
+              return null;
             }
           }),
         );
 
-        if (active) {
-          setBookmarks(updatedBookmarks);
+        if (active && updatedItems.some(Boolean)) {
+          setBookmarks((current) =>
+            current.map((item) => {
+              const updated = updatedItems.find(
+                (result) =>
+                  result &&
+                  result.mediaType === item.mediaType &&
+                  String(result.tmdbId) === String(item.tmdbId),
+              );
+
+              return updated ? { ...item, ...updated } : item;
+            }),
+          );
         }
       } catch (err) {
         if (active) {
