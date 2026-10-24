@@ -13,6 +13,7 @@ const SearchBar = () => {
   ]);
   const navigate = useNavigate();
 
+  // Movie genres for each mood
   const moods = [
     { label: "Happy 😊", genres: [35, 10751] },
     { label: "Sad 😔", genres: [18, 35] },
@@ -24,6 +25,7 @@ const SearchBar = () => {
 
   const [loading, setLoading] = useState(false);
 
+  // Navigate to search results
   const handleSearch = (e) => {
     e.preventDefault();
     const searchQuery = query.trim();
@@ -31,6 +33,7 @@ const SearchBar = () => {
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
+  // Fetch movie recommendations based on the selected mood
   const chooseMood = async (mood) => {
     if (loading) return;
 
@@ -66,6 +69,7 @@ const SearchBar = () => {
         }),
       );
 
+      // Remove duplicate movies and sort by popularity
       const uniqueMovies = new Map();
 
       results.flat().forEach((movie) => {
@@ -102,6 +106,7 @@ const SearchBar = () => {
     }
   };
 
+  // Generate a movie poster URL
   const imageUrl = (path) =>
     path ? `https://image.tmdb.org/t/p/w342${path}` : null;
 
@@ -123,6 +128,7 @@ const SearchBar = () => {
         />
       </form>
 
+      {/* Toggle the MoodFlix chatbot */}
       <button
         type="button"
         onClick={() => setChatOpen((open) => !open)}
@@ -131,9 +137,9 @@ const SearchBar = () => {
         className="flex cursor-pointer shrink-0 items-center gap-2 rounded-full bg-violet-600 px-3 py-3 text-white shadow-lg transition hover:bg-violet-500 sm:px-4"
       >
         <Sparkles size={18} />
-        
       </button>
 
+      {/* Chatbot window */}
       {chatOpen && (
         <div className="fixed bottom-4 right-3 z-100 flex h-[min(650px,80vh)] w-[min(390px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#101827] shadow-2xl sm:bottom-6 sm:right-6">
           <div className="flex items-center justify-between border-b border-slate-700 bg-violet-600/15 p-4">
@@ -158,6 +164,7 @@ const SearchBar = () => {
             </button>
           </div>
 
+          {/* Display chatbot messages and recommendations */}
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {messages.map((message, index) => (
               <div
@@ -226,6 +233,7 @@ const SearchBar = () => {
             )}
           </div>
 
+          {/* Let users select their current mood */}
           <div className="border-t border-slate-700 p-4">
             <p className="mb-3 text-sm font-semibold text-slate-300">
               How are you feeling?

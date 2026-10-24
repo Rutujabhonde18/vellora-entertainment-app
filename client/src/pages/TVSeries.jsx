@@ -3,6 +3,7 @@ import SearchBar from "../components/SearchBar";
 import MovieCard from "../components/MovieCard";
 import { getTrendingTV, getImageUrl } from "../services/tmdb";
 
+// Available TV series genre filters
 const genres = [
   { name: "All", id: null },
   { name: "Action", id: 10759 },
@@ -19,6 +20,7 @@ export default function TVSeries() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch trending TV series when the page loads
   useEffect(() => {
     let cancelled = false;
 
@@ -29,6 +31,7 @@ export default function TVSeries() {
 
         const data = await getTrendingTV();
 
+        // Remove duplicate series using their IDs
         const uniqueShows = Array.from(
           new Map(
             (Array.isArray(data) ? data : []).map((show) => [show.id, show]),
@@ -39,6 +42,7 @@ export default function TVSeries() {
           setShows(uniqueShows);
         }
       } catch (err) {
+        // Display an error if the series cannot be loaded
         if (!cancelled) {
           setError("Unable to load TV series. Please try again.");
           console.error("TV series error:", err);
@@ -52,15 +56,18 @@ export default function TVSeries() {
 
     fetchShows();
 
+    // Prevent state updates after the component unmounts
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // Get the ID of the currently selected genre
   const selectedGenreId = genres.find(
     (genre) => genre.name === selectedGenre,
   )?.id;
 
+  // Filter TV series based on the selected genre
   const filteredShows =
     selectedGenre === "All"
       ? shows
@@ -68,10 +75,12 @@ export default function TVSeries() {
 
   return (
     <div className="min-h-screen">
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
+      {/* Page heading and description */}
       <div className="mb-8 mt-0 px-5 md:mt-25">
         <h1 className="mt-5 text-3xl font-semibold sm:text-4xl">TV Series</h1>
 
@@ -81,6 +90,7 @@ export default function TVSeries() {
         </p>
       </div>
 
+      {/* Genre filter buttons */}
       <div className="mb-8 flex flex-wrap gap-2 px-5">
         {genres.map((genre) => (
           <button
@@ -97,12 +107,14 @@ export default function TVSeries() {
         ))}
       </div>
 
+      {/* Show loading or error messages when necessary */}
       {loading && (
         <p className="py-12 text-center text-slate-400">Loading TV series...</p>
       )}
 
       {error && <p className="py-12 text-center text-red-400">{error}</p>}
 
+      {/* Display filtered series after loading */}
       {!loading && !error && (
         <>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 px-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -119,6 +131,7 @@ export default function TVSeries() {
             ))}
           </div>
 
+          {/* Display a message when no series match the selected genre */}
           {filteredShows.length === 0 && (
             <p className="py-12 text-center text-slate-400">
               No TV series found in this genre.

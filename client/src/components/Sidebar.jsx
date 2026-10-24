@@ -4,6 +4,7 @@ import AccountMenu from "./AccountMenu";
 import SearchBar from "./SearchBar";
 import { House, Clapperboard, Tv, Bookmark, Play, Menu, X } from "lucide-react";
 
+// Sidebar navigation links
 const links = [
   { name: "Home", path: "/", Icon: House },
   { name: "Movies", path: "/movies", Icon: Clapperboard },
@@ -15,6 +16,7 @@ const Sidebar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Shared sidebar content for mobile and desktop
   const sidebarContent = (
     <>
       <div
@@ -25,14 +27,15 @@ const Sidebar = () => {
         className="mb-5 flex shrink-0 items-center gap-3 cursor-pointer"
       >
         <div className="mx-auto flex w-40 items-center justify-center">
-              <img
-                src="/Velora Purple Film Logo.png"
-                alt="Velora logo"
-                className="h-full w-full object-contain"
-              />
-            </div>
+          <img
+            src="/Velora Purple Film Logo.png"
+            alt="Velora logo"
+            className="h-full w-full object-contain"
+          />
+        </div>
       </div>
 
+      {/* Render navigation links */}
       <nav className="flex flex-col gap-2">
         {links.map(({ name, path, Icon }) => (
           <NavLink
@@ -54,6 +57,7 @@ const Sidebar = () => {
         ))}
       </nav>
 
+      {/* Account and authentication options */}
       <div className="mt-auto shrink-0">
         <AccountMenu />
       </div>
@@ -78,7 +82,7 @@ const Sidebar = () => {
         </div>
       </header>
 
-      {/* Mobile backdrop */}
+      {/* Dark backdrop when the mobile menu is open */}
       {menuOpen && (
         <button
           type="button"

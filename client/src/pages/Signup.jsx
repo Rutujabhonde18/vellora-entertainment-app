@@ -7,6 +7,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../firebase";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 
+// Define validation rules for the signup form
 const signupSchema = Yup.object({
   name: Yup.string()
     .trim()
@@ -21,6 +22,7 @@ const signupSchema = Yup.object({
     .required("Password is required"),
 });
 
+// Convert Firebase error codes into user-friendly messages
 function getFirebaseErrorMessage(code) {
   switch (code) {
     case "auth/email-already-in-use":
@@ -45,6 +47,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Configure Formik to manage form values, validation, and submission
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -56,12 +59,14 @@ export default function Signup() {
       setError("");
 
       try {
+        // Create a new Firebase account using email and password
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           values.email.trim(),
           values.password,
         );
 
+        // Save the user's name to their Firebase profile
         try {
           await updateProfile(userCredential.user, {
             displayName: values.name.trim(),
@@ -77,6 +82,7 @@ export default function Signup() {
           return;
         }
 
+        // Redirect to the home page after successful signup
         navigate("/");
       } catch (err) {
         setError(getFirebaseErrorMessage(err.code));
@@ -86,6 +92,7 @@ export default function Signup() {
     },
   });
 
+  // Clear previous errors whenever the user changes a field
   const handleFieldChange = (event) => {
     setError("");
     formik.handleChange(event);
@@ -94,6 +101,7 @@ export default function Signup() {
   return (
     <div className="lg:h-screen md:h-full lg:mt-0 mt-16 w-full overflow-hidden bg-[#080d1a]">
       <div className="grid h-full w-full grid-cols-1 md:grid-cols-2">
+        {/* Branding section with background image and logo */}
         <div
           className="relative hidden h-full items-center justify-center overflow-hidden bg-cover bg-center text-center md:flex"
           style={{
@@ -119,6 +127,7 @@ export default function Signup() {
           </div>
         </div>
 
+        {/* Signup form section */}
         <div className="flex h-full items-center justify-center overflow-y-auto px-6 py-6 sm:px-10 md:px-12">
           <div className="w-full max-w-sm">
             <div className="mb-7">
@@ -128,11 +137,13 @@ export default function Signup() {
               </p>
             </div>
 
+            {/* Handle form submission through Formik */}
             <form
               onSubmit={formik.handleSubmit}
               noValidate
               className="space-y-5"
             >
+              {/* Full name input and validation message */}
               <div>
                 <label
                   htmlFor="name"
@@ -177,6 +188,7 @@ export default function Signup() {
                 )}
               </div>
 
+              {/* Email input and validation message */}
               <div>
                 <label
                   htmlFor="email"
@@ -221,6 +233,7 @@ export default function Signup() {
                 )}
               </div>
 
+              {/* Password input with show/hide functionality */}
               <div>
                 <label
                   htmlFor="password"
@@ -280,12 +293,14 @@ export default function Signup() {
                 </p>
               </div>
 
+              {/* Display signup or profile update errors */}
               {error && (
                 <p role="alert" className="text-sm text-red-400">
                   {error}
                 </p>
               )}
 
+              {/* Disable the button while the account is being created */}
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
@@ -295,8 +310,10 @@ export default function Signup() {
               </button>
             </form>
 
+            {/* Alternative signup option using Google */}
             <GoogleAuthButton />
 
+            {/* Link to the existing login page */}
             <p className="mt-7 text-center text-sm text-slate-400">
               Already have an account?{" "}
               <Link

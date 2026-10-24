@@ -8,6 +8,7 @@ import {
   getImageUrl,
 } from "../services/tmdb";
 
+// Display a section of trending movies or TV series
 function MovieSection({ title, items, loading, error, mediaType, onSeeAll }) {
   // Remove duplicate IDs before rendering cards.
   const uniqueItems = Array.from(
@@ -27,6 +28,7 @@ function MovieSection({ title, items, loading, error, mediaType, onSeeAll }) {
         </button>
       </div>
 
+      {/* Display loading, error, empty, or movie card states */}
       {loading ? (
         <p className="text-gray-400">Loading {title.toLowerCase()}...</p>
       ) : error ? (
@@ -68,6 +70,7 @@ const Home = () => {
   const [error, setError] = useState("");
   const [bannerIndex, setBannerIndex] = useState(0);
 
+  // Fetch trending movies and TV series when the page loads
   useEffect(() => {
     async function loadTrending() {
       try {
@@ -79,7 +82,7 @@ const Home = () => {
           getTrendingTV(),
         ]);
 
-        // Also remove duplicates from the source arrays.
+        // Remove duplicate items from the API results
         const uniqueMovies = Array.from(
           new Map(movieData.map((item) => [item.id, item])).values(),
         );
@@ -91,6 +94,7 @@ const Home = () => {
         setMovies(uniqueMovies);
         setShows(uniqueShows);
 
+        // Select a random movie for the banner
         setBannerIndex(
           uniqueMovies.length > 0
             ? Math.floor(Math.random() * uniqueMovies.length)
@@ -109,6 +113,7 @@ const Home = () => {
     loadTrending();
   }, []);
 
+  // Get the selected banner movie and its display information
   const bannerMovie = movies[bannerIndex] || movies[0];
 
   const bannerTitle = bannerMovie?.title || "Discover Movies";
@@ -118,10 +123,12 @@ const Home = () => {
 
   return (
     <div>
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
+      {/* Featured movie banner */}
       <section className="relative mt-0 mb-5 flex min-h-96 items-end overflow-hidden bg-slate-900 p-6 md:mt-15 sm:p-10">
         {bannerImage && (
           <img
@@ -164,6 +171,7 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Trending movie and TV series sections */}
       <MovieSection
         title="Trending Movies"
         items={movies}

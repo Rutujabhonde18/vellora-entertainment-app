@@ -2,12 +2,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 
+// Create authentication context
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -25,6 +27,7 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  // Sign out the current user
   const logout = () => signOut(auth);
 
   return (
@@ -34,6 +37,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Access authentication context in components
 export function useAuth() {
   const context = useContext(AuthContext);
 

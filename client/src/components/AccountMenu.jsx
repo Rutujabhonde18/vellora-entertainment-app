@@ -18,11 +18,13 @@ const AccountMenu = () => {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
 
+  // Close menu and navigate to the selected page
   const handleNavigation = (path) => {
     setIsOpen(false);
     navigate(path);
   };
 
+  // Log out the user and handle errors
   const handleLogout = async () => {
     setError("");
     setLoggingOut(true);
@@ -39,6 +41,7 @@ const AccountMenu = () => {
     }
   };
 
+  // Get the user's display name or email
   const displayName = user?.displayName || user?.email || "My account";
 
   return (
@@ -87,6 +90,7 @@ const AccountMenu = () => {
         )}
       </button>
 
+      {/* Show account options when the menu is open */}
       {isOpen && !loading && (
         <div className="mt-1 space-y-1 rounded-xl bg-[#080d1a] p-2">
           {!user ? (
@@ -127,6 +131,7 @@ const AccountMenu = () => {
             </>
           )}
 
+          {/* Display logout errors */}
           {error && (
             <p role="alert" className="px-3 py-2 text-xs text-red-400">
               {error}

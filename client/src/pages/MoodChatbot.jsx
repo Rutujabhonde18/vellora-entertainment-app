@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, Sparkles, Film } from "lucide-react";
 import { searchMovies, searchTV, getImageUrl } from "../services/tmdb";
 
+// Available moods and their related movie genres
 const moods = [
   {
     label: "Happy 😊",
@@ -52,6 +53,7 @@ export default function MoodChatbot() {
   ]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch movie recommendations based on the selected mood
   async function chooseMood(mood) {
     if (loading) return;
 
@@ -68,7 +70,7 @@ export default function MoodChatbot() {
         searchTV(""),
       ]);
 
-      // Fetch popular movies and series using TMDB genre discovery.
+      // Fetch popular movies matching the selected genres
       const token = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
       const headers = {
         Authorization: `Bearer ${token}`,
@@ -90,12 +92,14 @@ export default function MoodChatbot() {
         .filter((result) => result.status === "fulfilled")
         .flatMap((result) => result.value.results || []);
 
+      // Remove duplicate movies and sort by popularity
       const uniqueMovies = Array.from(
         new Map(movies.map((movie) => [movie.id, movie])).values(),
       )
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 6);
 
+      // Prepare movie data for display
       const recommendations = uniqueMovies.map((movie) => ({
         ...movie,
         mediaType: "movie",
@@ -103,6 +107,7 @@ export default function MoodChatbot() {
         displayYear: movie.release_date?.slice(0, 4),
       }));
 
+      // Add recommendations or a fallback message to the chat
       if (recommendations.length === 0) {
         setMessages((previous) => [
           ...previous,
@@ -137,6 +142,7 @@ export default function MoodChatbot() {
 
   return (
     <div className="mx-auto min-h-screen max-w-5xl px-4 py-6 sm:px-8">
+      {/* Return to the previous page */}
       <button
         onClick={() => navigate(-1)}
         className="mb-5 flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
@@ -146,6 +152,7 @@ export default function MoodChatbot() {
       </button>
 
       <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101827] shadow-2xl">
+        {/* Chatbot header */}
         <div className="flex items-center gap-3 border-b border-slate-800 bg-violet-600/15 p-5">
           <div className="rounded-full bg-violet-600 p-3">
             <Sparkles size={23} />
@@ -158,6 +165,7 @@ export default function MoodChatbot() {
           </div>
         </div>
 
+        {/* Display chat messages and movie recommendations */}
         <div className="flex min-h-420px flex-col gap-5 p-4 sm:p-6">
           {messages.map((message, index) => (
             <div
@@ -175,6 +183,7 @@ export default function MoodChatbot() {
               >
                 <p className="text-sm leading-6">{message.text}</p>
 
+                {/* Render recommended movies as clickable cards */}
                 {message.recommendations && (
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {message.recommendations.map((movie) => (
@@ -215,6 +224,7 @@ export default function MoodChatbot() {
             </div>
           ))}
 
+          {/* Show a loading message while recommendations are fetched */}
           {loading && (
             <div className="self-start rounded-xl border border-slate-700 bg-[#080d1a] p-4 text-sm text-slate-400">
               Finding your next favourite movie...
@@ -222,6 +232,7 @@ export default function MoodChatbot() {
           )}
         </div>
 
+        {/* Let users select their current mood */}
         <div className="border-t border-slate-800 p-4 sm:p-6">
           <p className="mb-3 text-sm font-semibold text-slate-300">
             How are you feeling?

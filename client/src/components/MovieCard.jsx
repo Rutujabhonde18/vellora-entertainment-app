@@ -11,6 +11,7 @@ import {
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
+// Convert a title into a URL-friendly slug
 function createSlug(title = "") {
   return title
     .toLowerCase()
@@ -35,7 +36,7 @@ export default function MovieCard({
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
-  // Keep Redux as a fallback while the backend integration is loading.
+  // Use Redux bookmarks as a fallback for logged-out users
   const reduxBookmarks = useSelector((state) => state.bookmarks || []);
 
   const [serverBookmarks, setServerBookmarks] = useState([]);
@@ -43,6 +44,7 @@ export default function MovieCard({
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Get the movie or TV show's display information
   const cardTitle = title || name || "Untitled";
   const cardMediaType = media_type || mediaType || "movie";
   const tmdbId = Number(id);
@@ -58,6 +60,7 @@ export default function MovieCard({
       ? (release_date || first_air_date).slice(0, 4)
       : "");
 
+  // Load bookmarks for the logged-in user
   useEffect(() => {
     let active = true;
 
@@ -87,6 +90,7 @@ export default function MovieCard({
     };
   }, [user, authLoading]);
 
+  // Check whether the current item is bookmarked
   const isBookmarked = user
     ? loadedUserId === user.uid &&
       serverBookmarks.some(
@@ -100,6 +104,7 @@ export default function MovieCard({
           bookmark.mediaType === cardMediaType,
       );
 
+  // Prepare bookmark data
   const item = {
     id,
     tmdbId,
@@ -111,6 +116,7 @@ export default function MovieCard({
     genre,
   };
 
+  // Navigate to the movie or TV show details page
   const openDetails = () => {
     navigate(
       cardMediaType === "tv"
@@ -119,6 +125,7 @@ export default function MovieCard({
     );
   };
 
+  // Add or remove a bookmark
   const handleBookmark = async (event) => {
     event.stopPropagation();
     setError("");
@@ -144,6 +151,7 @@ export default function MovieCard({
       setBookmarkLoading(true);
 
       if (isBookmarked) {
+        // Remove the bookmark from the backend and update the UI
         await removeBookmark(cardMediaType, tmdbId);
 
         setServerBookmarks((current) =>
@@ -156,6 +164,7 @@ export default function MovieCard({
           ),
         );
       } else {
+        // Save the bookmark to the backend
         const data = await addBookmark({
           tmdbId,
           mediaType: cardMediaType,
@@ -210,6 +219,7 @@ export default function MovieCard({
           </div>
         )}
 
+        {/* Bookmark button */}
         <button
           type="button"
           aria-label={
@@ -245,6 +255,7 @@ export default function MovieCard({
         {releaseYear || "Year unavailable"}
       </p>
 
+      {/* Display bookmark errors */}
       {error && (
         <p role="status" className="mt-2 text-xs text-red-400">
           {error}

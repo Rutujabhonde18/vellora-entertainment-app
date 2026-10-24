@@ -10,6 +10,7 @@ export default function Bookmarks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Load bookmarks when the page opens
   useEffect(() => {
     let active = true;
 
@@ -18,10 +19,11 @@ export default function Bookmarks() {
         setLoading(true);
         setError("");
 
+        // Fetch saved bookmarks from the backend
         const response = await getBookmarks();
         const saved = response.bookmarks || [];
 
-        // Show saved items immediately using data from the backend.
+        // Display saved items immediately using backend data
         const initialBookmarks = saved.map((item) => ({
           ...item,
           image: item.posterPath ? getImageUrl(item.posterPath) : "",
@@ -32,11 +34,12 @@ export default function Bookmarks() {
           setLoading(false);
         }
 
-        // Fetch missing details in the background.
+        // Find bookmarks with missing titles or poster images
         const missingDetails = saved.filter(
           (item) => !item.title || !item.posterPath,
         );
 
+        // Fetch missing movie or TV series details
         const updatedItems = await Promise.all(
           missingDetails.map(async (item) => {
             try {
@@ -47,6 +50,7 @@ export default function Bookmarks() {
 
               const posterPath = item.posterPath || details.poster_path || null;
 
+              // Update the bookmark with complete details
               return {
                 ...item,
                 title:
@@ -61,6 +65,7 @@ export default function Bookmarks() {
           }),
         );
 
+        // Update existing bookmarks with the fetched details
         if (active && updatedItems.some(Boolean)) {
           setBookmarks((current) =>
             current.map((item) => {
@@ -76,10 +81,12 @@ export default function Bookmarks() {
           );
         }
       } catch (err) {
+        // Display an error if bookmarks cannot be loaded
         if (active) {
           setError(err.message || "Unable to load bookmarks.");
         }
       } finally {
+        // Stop the loading state when the request finishes
         if (active) {
           setLoading(false);
         }
@@ -88,15 +95,17 @@ export default function Bookmarks() {
 
     loadBookmarks();
 
+    // Prevent state updates after the component unmounts
     return () => {
       active = false;
     };
   }, []);
 
+  // Separate bookmarked movies and TV series
   const movies = bookmarks.filter((item) => item.mediaType === "movie");
-
   const shows = bookmarks.filter((item) => item.mediaType === "tv");
 
+  // Render bookmark cards in a responsive grid
   const renderCards = (items) => (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {items.map((item) => (
@@ -112,6 +121,7 @@ export default function Bookmarks() {
     </div>
   );
 
+  // Show loading message while bookmarks are being fetched
   if (loading) {
     return (
       <div className="min-h-screen p-8 text-center text-slate-400">
@@ -120,6 +130,7 @@ export default function Bookmarks() {
     );
   }
 
+  // Show an error message if loading fails
   if (error) {
     return (
       <div className="min-h-screen p-8 text-center">
@@ -130,10 +141,12 @@ export default function Bookmarks() {
 
   return (
     <div className="min-h-screen">
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
+      {/* Show an empty state when there are no bookmarks */}
       {bookmarks.length === 0 ? (
         <div className="mt-15 px-5 py-16 text-center">
           <Bookmark size={42} className="mx-auto mb-4 text-violet-400" />
@@ -145,6 +158,7 @@ export default function Bookmarks() {
         </div>
       ) : (
         <>
+          {/* Display bookmarked movies */}
           {movies.length > 0 && (
             <section className="mt-0 p-5 md:mt-20">
               <div className="mb-5 flex items-center gap-2">
@@ -160,6 +174,7 @@ export default function Bookmarks() {
             </section>
           )}
 
+          {/* Display bookmarked TV series */}
           {shows.length > 0 && (
             <section className="p-5">
               <div className="mb-5 flex items-center gap-2">

@@ -8,6 +8,7 @@ export default function GoogleAuthButton() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Handle Google sign-in
   const handleGoogleLogin = async () => {
     if (loading) return;
 
@@ -19,6 +20,7 @@ export default function GoogleAuthButton() {
       await signInWithPopup(auth, provider);
       navigate("/");
     } catch (err) {
+      // Display an appropriate message for authentication errors
       if (err.code === "auth/popup-closed-by-user") {
         setError("Google sign-in was cancelled.");
       } else if (err.code === "auth/popup-blocked") {
@@ -78,6 +80,7 @@ export default function GoogleAuthButton() {
         {loading ? "Connecting to Google..." : "Continue with Google"}
       </button>
 
+      {/* Display sign-in errors */}
       {error && (
         <p role="alert" className="mt-3 text-center text-xs text-red-400">
           {error}

@@ -3,6 +3,7 @@ import SearchBar from "../components/SearchBar";
 import MovieCard from "../components/MovieCard";
 import { getTrendingMovies, getImageUrl } from "../services/tmdb";
 
+// Available movie genre filters
 const genres = ["All", "Action", "Drama", "Sci-Fi"];
 
 export default function Movies() {
@@ -11,6 +12,7 @@ export default function Movies() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch trending movies when the page loads
   useEffect(() => {
     async function loadMovies() {
       try {
@@ -36,6 +38,7 @@ export default function Movies() {
     loadMovies();
   }, []);
 
+  // Filter movies based on the selected genre
   const filteredMovies =
     selectedGenre === "All"
       ? movies
@@ -50,10 +53,12 @@ export default function Movies() {
 
   return (
     <div className="min-h-screen">
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
+      {/* Page heading and description */}
       <div className="mb-8 mt-0 px-5 md:mt-25">
         <h1 className="mt-5 text-3xl font-semibold sm:text-4xl">Movies</h1>
 
@@ -63,6 +68,7 @@ export default function Movies() {
         </p>
       </div>
 
+      {/* Genre filter buttons */}
       <div className="mb-8 flex flex-wrap gap-2 px-5">
         {genres.map((genre) => (
           <button
@@ -79,6 +85,7 @@ export default function Movies() {
         ))}
       </div>
 
+      {/* Display loading, error, or filtered movie results */}
       {loading ? (
         <p className="px-5 py-12 text-center text-slate-400">
           Loading movies...
@@ -101,6 +108,7 @@ export default function Movies() {
             ))}
           </div>
 
+          {/* Show a message when no movies match the selected genre */}
           {filteredMovies.length === 0 && (
             <p className="py-12 text-center text-slate-400">
               No movies found in this genre.

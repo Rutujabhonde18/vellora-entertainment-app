@@ -44,6 +44,7 @@ export default function MovieDetails() {
   const [watchProviders, setWatchProviders] = useState(null);
   const [watchError, setWatchError] = useState("");
 
+  // Fetch movie details, cast, and similar movies
   useEffect(() => {
     let active = true;
 
@@ -59,6 +60,7 @@ export default function MovieDetails() {
 
         if (!active) return;
 
+        // Format movie data for display
         setMovie({
           ...data,
           id: data.id,
@@ -70,6 +72,7 @@ export default function MovieDetails() {
           mediaType: "movie",
         });
 
+        // Fetch cast and similar movies concurrently
         const results = await Promise.allSettled([
           getMovieCredits(id),
           getSimilarMovies(id),
@@ -77,12 +80,14 @@ export default function MovieDetails() {
 
         if (!active) return;
 
+        // Display the first 12 cast members
         if (results[0].status === "fulfilled") {
           setCast((results[0].value.cast || []).slice(0, 12));
         } else {
           console.error("Movie cast error:", results[0].reason);
         }
 
+        // Remove duplicate entries from similar movies
         if (results[1].status === "fulfilled") {
           const unique = Array.from(
             new Map(
@@ -105,11 +110,13 @@ export default function MovieDetails() {
 
     loadMovie();
 
+    // Prevent state updates after the component unmounts
     return () => {
       active = false;
     };
   }, [id]);
 
+  // Load the movie trailer and streaming providers
   async function openWatchOptions() {
     setShowWatchModal(true);
     setWatchLoading(true);
@@ -123,6 +130,7 @@ export default function MovieDetails() {
         getMovieWatchProviders(id, "IN"),
       ]);
 
+      // Prefer an official YouTube trailer when available
       if (videosResult.status === "fulfilled") {
         const videos = videosResult.value || [];
 
@@ -143,6 +151,7 @@ export default function MovieDetails() {
         setTrailer(selectedTrailer || null);
       }
 
+      // Save available streaming provider information
       if (providersResult.status === "fulfilled") {
         setWatchProviders(providersResult.value);
       }
@@ -161,6 +170,7 @@ export default function MovieDetails() {
     }
   }
 
+  // Check whether the movie is already bookmarked
   const isBookmarked = movie
     ? bookmarks.some(
         (item) =>
@@ -168,6 +178,7 @@ export default function MovieDetails() {
       )
     : false;
 
+  // Show a loading message while movie details are fetched
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080d1a] p-8 text-white">
@@ -176,6 +187,7 @@ export default function MovieDetails() {
     );
   }
 
+  // Display an error message if the movie cannot be loaded
   if (error || !movie) {
     return (
       <div className="min-h-screen bg-[#080d1a] p-8 text-white">
@@ -190,6 +202,7 @@ export default function MovieDetails() {
     );
   }
 
+  // Group streaming providers by viewing option
   const providerGroups = [
     ["Stream", watchProviders?.flatrate],
     ["Rent", watchProviders?.rent],
@@ -202,11 +215,12 @@ export default function MovieDetails() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#080d1a] pb-12 text-white">
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
-      {/* Cinematic hero */}
+      {/* Movie banner with poster, overview, and actions */}
       <section className="relative isolate min-h-560px overflow-hidden md:mt-16">
         {movie.backdrop_path && (
           <img
@@ -234,6 +248,7 @@ export default function MovieDetails() {
                 {movie.title}
               </h1>
 
+              {/* Display release year, runtime, and rating */}
               <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-300">
                 {movie.year && (
                   <span className="flex items-center gap-1.5">
@@ -258,6 +273,7 @@ export default function MovieDetails() {
                 )}
               </div>
 
+              {/* Display movie genres */}
               {movie.genres?.length > 0 && (
                 <div className="mt-5 flex flex-wrap gap-2">
                   {movie.genres.map((genre) => (
@@ -280,6 +296,7 @@ export default function MovieDetails() {
                 {movie.overview || "No overview is available for this movie."}
               </p>
 
+              {/* Watch the movie trailer or manage bookmarks */}
               <div className="mt-7 flex flex-wrap gap-3">
                 <button
                   onClick={openWatchOptions}
@@ -318,7 +335,7 @@ export default function MovieDetails() {
         </div>
       </section>
 
-      {/* Cast */}
+      {/* Display the movie's cast */}
       <section className="mx-auto max-w-7xl px-5">
         <div className="mb-5 flex items-center gap-3">
           <Users className="text-violet-400" size={23} />
@@ -363,7 +380,7 @@ export default function MovieDetails() {
         )}
       </section>
 
-      {/* Similar movies */}
+      {/* Recommend similar movies */}
       <section className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
         <h2 className="mb-5 text-2xl font-bold">You May Also Like</h2>
 
@@ -389,7 +406,7 @@ export default function MovieDetails() {
         )}
       </section>
 
-      {/* Watch options modal */}
+      {/* Modal showing trailer and streaming options */}
       {showWatchModal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
@@ -429,6 +446,7 @@ export default function MovieDetails() {
                   <p className="mb-4 text-sm text-amber-300">{watchError}</p>
                 )}
 
+                {/* Embed the selected YouTube trailer */}
                 <section>
                   <h3 className="mb-3 text-lg font-semibold">
                     Official trailer
@@ -454,6 +472,7 @@ export default function MovieDetails() {
                   )}
                 </section>
 
+                {/* List streaming, rental, and purchase providers */}
                 <section className="mt-7">
                   <h3 className="mb-3 text-lg font-semibold">Where to watch</h3>
 

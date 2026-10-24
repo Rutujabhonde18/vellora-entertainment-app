@@ -13,6 +13,7 @@ import {
 import { auth } from "../firebase";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 
+// Validate login form fields
 const loginSchema = Yup.object({
   email: Yup.string()
     .trim()
@@ -21,6 +22,7 @@ const loginSchema = Yup.object({
   password: Yup.string().required("Password is required"),
 });
 
+// Convert Firebase error codes into user-friendly messages
 function getLoginErrorMessage(code) {
   switch (code) {
     case "auth/invalid-credential":
@@ -48,6 +50,7 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Handle form validation and login submission
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -59,12 +62,14 @@ export default function Login() {
       setMessage("");
 
       try {
+        // Set login persistence based on the Remember me option
         const persistence = rememberMe
           ? browserLocalPersistence
           : browserSessionPersistence;
 
         await setPersistence(auth, persistence);
 
+        // Authenticate the user with Firebase
         await signInWithEmailAndPassword(
           auth,
           values.email.trim(),
@@ -80,6 +85,7 @@ export default function Login() {
     },
   });
 
+  // Send a password reset email
   const handleForgotPassword = async () => {
     if (resetLoading || formik.isSubmitting) return;
 
@@ -93,6 +99,7 @@ export default function Login() {
       return;
     }
 
+    // Validate the email before requesting a password reset
     try {
       await Yup.string().email().validate(email);
     } catch {
@@ -123,6 +130,7 @@ export default function Login() {
     }
   };
 
+  // Clear messages and update the form when a field changes
   const handleFieldChange = (event) => {
     setError("");
     setMessage("");
@@ -132,6 +140,7 @@ export default function Login() {
   return (
     <div className="lg:h-screen md:h-full lg:mt-0 mt-16 w-full overflow-hidden bg-[#080d1a]">
       <div className="grid h-full w-full grid-cols-1 md:grid-cols-2">
+        {/* Welcome panel displayed on desktop */}
         <div
           className="relative hidden h-full items-center justify-center overflow-hidden bg-cover bg-center text-center md:flex"
           style={{
@@ -157,6 +166,7 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Login form */}
         <div className="flex h-full items-center justify-center overflow-y-auto px-6 py-6 sm:px-10 md:px-12">
           <div className="w-full max-w-sm">
             <div className="mb-8">
@@ -203,6 +213,7 @@ export default function Login() {
                   />
                 </div>
 
+                {/* Show email validation errors */}
                 {formik.touched.email && formik.errors.email && (
                   <p className="mt-1 text-xs text-red-400">
                     {formik.errors.email}
@@ -241,6 +252,7 @@ export default function Login() {
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
 
+                  {/* Toggle password visibility */}
                   <button
                     type="button"
                     onClick={() => setShowPassword((previous) => !previous)}
@@ -253,6 +265,7 @@ export default function Login() {
                   </button>
                 </div>
 
+                {/* Show password validation errors */}
                 {formik.touched.password && formik.errors.password && (
                   <p className="mt-1 text-xs text-red-400">
                     {formik.errors.password}
@@ -260,6 +273,7 @@ export default function Login() {
                 )}
               </div>
 
+              {/* Remember login and reset password options */}
               <div className="flex items-center justify-between gap-3 text-xs">
                 <label className="flex cursor-pointer items-center gap-2 text-slate-400">
                   <input
@@ -281,6 +295,7 @@ export default function Login() {
                 </button>
               </div>
 
+              {/* Display login and password reset messages */}
               {error && (
                 <p role="alert" className="text-sm text-red-400">
                   {error}
@@ -302,6 +317,7 @@ export default function Login() {
               </button>
             </form>
 
+            {/* Google sign-in option */}
             <GoogleAuthButton />
 
             <p className="mt-7 text-center text-sm text-slate-400">

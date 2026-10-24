@@ -37,16 +37,17 @@ export default function TVDetails() {
   const [episodesLoading, setEpisodesLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Watch Now state
+  // State for the Watch Now modal and viewing options
   const [watchModalOpen, setWatchModalOpen] = useState(false);
   const [trailer, setTrailer] = useState(null);
   const [watchProviders, setWatchProviders] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
   const [watchError, setWatchError] = useState("");
 
+  // Get saved bookmarks from Redux
   const bookmarks = useSelector((state) => state.bookmarks);
 
-  // Load series details, cast and similar series.
+  // Load series details, cast and similar series
   useEffect(() => {
     let cancelled = false;
 
@@ -58,6 +59,7 @@ export default function TVDetails() {
       setSimilarShows([]);
 
       try {
+        // Fetch series details, cast and recommendations together
         const [detailsResult, creditsResult, similarResult] =
           await Promise.allSettled([
             getTVDetails(id),
@@ -74,6 +76,7 @@ export default function TVDetails() {
         const details = detailsResult.value;
         setShow(details);
 
+        // Select the first available season, preferring season 1
         setSeason(
           details.seasons?.some((item) => item.season_number === 1)
             ? 1
@@ -81,10 +84,12 @@ export default function TVDetails() {
                 ?.season_number ?? 1),
         );
 
+        // Store the top 12 cast members
         if (creditsResult.status === "fulfilled") {
           setCast(creditsResult.value.cast?.slice(0, 12) || []);
         }
 
+        // Remove duplicate series and exclude the current series
         if (similarResult.status === "fulfilled") {
           const uniqueShows = Array.from(
             new Map(
@@ -108,12 +113,13 @@ export default function TVDetails() {
 
     loadShow();
 
+    // Prevent state updates if the component is no longer active
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  // Load episodes for the selected season.
+  // Load episodes whenever the selected season changes
   useEffect(() => {
     if (!show || String(show.id) !== String(id)) return;
 
@@ -125,6 +131,7 @@ export default function TVDetails() {
       setShowAllEpisodes(false);
 
       try {
+        // Request episodes for the selected season from TMDB
         const response = await fetch(
           `https://api.themoviedb.org/3/tv/${id}/season/${season}?language=en-US`,
           {
@@ -160,7 +167,7 @@ export default function TVDetails() {
     };
   }, [id, season, show]);
 
-  // Load trailer and India watch providers when Watch Now is clicked.
+  // Load the trailer and Indian streaming providers when Watch Now is clicked
   async function handleWatchNow() {
     setWatchModalOpen(true);
     setWatchLoading(true);
@@ -169,11 +176,13 @@ export default function TVDetails() {
     setWatchProviders(null);
 
     try {
+      // Fetch trailer videos and streaming providers together
       const [videosResult, providersResult] = await Promise.allSettled([
         getTVVideos(id),
         getTVWatchProviders(id, "IN"),
       ]);
 
+      // Select the best available YouTube trailer or teaser
       if (videosResult.status === "fulfilled") {
         const videos = videosResult.value || [];
 
@@ -192,10 +201,12 @@ export default function TVDetails() {
         setTrailer(selectedTrailer);
       }
 
+      // Save streaming provider information when available
       if (providersResult.status === "fulfilled") {
         setWatchProviders(providersResult.value);
       }
 
+      // Show an error only if both requests fail
       if (
         videosResult.status === "rejected" &&
         providersResult.status === "rejected"
@@ -212,6 +223,7 @@ export default function TVDetails() {
     }
   }
 
+  // Display a loading message while fetching series details
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080d1a] text-white">
@@ -221,6 +233,7 @@ export default function TVDetails() {
     );
   }
 
+  // Display an error message if the series cannot be loaded
   if (error || !show) {
     return (
       <div className="min-h-screen bg-[#080d1a] text-white">
@@ -241,6 +254,7 @@ export default function TVDetails() {
     );
   }
 
+  // Prepare the series information for display
   const title = show.name || "Untitled TV Series";
   const year = show.first_air_date?.slice(0, 4);
   const rating =
@@ -250,10 +264,12 @@ export default function TVDetails() {
   const image = getImageUrl(show.poster_path);
   const backdrop = getImageUrl(show.backdrop_path, "w1280");
 
+  // Check whether this series is already bookmarked
   const isBookmarked = bookmarks.some(
     (item) => String(item.id) === String(show.id) && item.mediaType === "tv",
   );
 
+  // Prepare the series data to save or remove from bookmarks
   const bookmarkItem = {
     id: show.id,
     title,
@@ -265,9 +281,11 @@ export default function TVDetails() {
     genre: "TV Series",
   };
 
+  // Get all regular seasons, excluding specials
   const availableSeasons =
     show.seasons?.filter((item) => item.season_number > 0) || [];
 
+  // Organize streaming providers into stream, rent and buy categories
   const providerGroups = [
     { label: "Stream", providers: watchProviders?.flatrate || [] },
     { label: "Rent", providers: watchProviders?.rent || [] },
@@ -276,11 +294,12 @@ export default function TVDetails() {
 
   return (
     <div className="min-h-screen bg-[#080d1a] text-white">
+      {/* Search bar for desktop screens */}
       <div className="hidden md:block">
         <SearchBar />
       </div>
 
-      {/* Cinematic series hero */}
+      {/* Main series banner with poster, details and actions */}
       <section className="relative isolate overflow-hidden bg-[#101827]">
         {backdrop && (
           <img
@@ -294,6 +313,7 @@ export default function TVDetails() {
         <div className="absolute inset-0 bg-linear-to-t from-[#080d1a] via-transparent to-[#080d1a]/20" />
 
         <div className="relative mx-auto flex max-w-7xl flex-col gap-7 px-5 py-2 sm:px-8 md:flex-row md:items-center md:py-5 sm:mt-5 lg:mt-10">
+          {/* Series poster or fallback when no poster is available */}
           {image ? (
             <img
               src={image}
@@ -315,6 +335,7 @@ export default function TVDetails() {
               <p className="mt-3 italic text-slate-300">“{show.tagline}”</p>
             )}
 
+            {/* Release year, rating, seasons, episodes and status */}
             <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-300">
               {year && (
                 <span className="flex items-center gap-2">
@@ -346,6 +367,7 @@ export default function TVDetails() {
               )}
             </div>
 
+            {/* Display the series genres */}
             {show.genres?.length > 0 && (
               <div className="mt-5 flex flex-wrap gap-2">
                 {show.genres.map((genre) => (
@@ -359,6 +381,7 @@ export default function TVDetails() {
               </div>
             )}
 
+            {/* Series description */}
             <p className="mt-6 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
               {show.overview || "No description is available for this series."}
             </p>
@@ -370,6 +393,7 @@ export default function TVDetails() {
               </p>
             )}
 
+            {/* Watch Now and bookmark actions */}
             <div className="mt-7 flex flex-wrap gap-3">
               <button
                 onClick={handleWatchNow}
@@ -391,6 +415,7 @@ export default function TVDetails() {
               </button>
             </div>
 
+            {/* Buttons for selecting a season */}
             {availableSeasons.length > 0 && (
               <div className="mt-8">
                 <h2 className="mb-3 text-lg font-semibold">Select Season</h2>
@@ -416,7 +441,7 @@ export default function TVDetails() {
         </div>
       </section>
 
-      {/* Cast */}
+      {/* Cast members and their characters */}
       {cast.length > 0 && (
         <section className="mx-auto max-w-7xl px-5 sm:px-8">
           <h2 className="mb-5 text-2xl font-bold">Top Cast</h2>
@@ -449,7 +474,7 @@ export default function TVDetails() {
         </section>
       )}
 
-      {/* Episodes */}
+      {/* Episodes for the selected season */}
       <section className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-2xl font-bold">Season {season} Episodes</h2>
@@ -458,6 +483,7 @@ export default function TVDetails() {
           </span>
         </div>
 
+        {/* Show loading, empty state or episode cards */}
         {episodesLoading ? (
           <p className="text-slate-400">Loading episodes...</p>
         ) : episodes.length === 0 ? (
@@ -472,6 +498,7 @@ export default function TVDetails() {
                   key={episode.id}
                   className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-[#101827] p-4 transition hover:border-slate-700 sm:flex-row"
                 >
+                  {/* Episode still or placeholder */}
                   {episode.still_path ? (
                     <img
                       src={getImageUrl(episode.still_path, "w500")}
@@ -490,6 +517,7 @@ export default function TVDetails() {
                       Episode {episode.episode_number}: {episode.name}
                     </h3>
 
+                    {/* Episode air date, runtime and rating */}
                     <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-400 sm:text-sm">
                       {episode.air_date && (
                         <span className="flex items-center gap-1.5">
@@ -524,6 +552,7 @@ export default function TVDetails() {
           </div>
         )}
 
+        {/* Toggle between the first three episodes and the full list */}
         {!episodesLoading && episodes.length > 3 && (
           <button
             onClick={() => setShowAllEpisodes((previous) => !previous)}
@@ -534,7 +563,7 @@ export default function TVDetails() {
         )}
       </section>
 
-      {/* Similar series */}
+      {/* Recommended series related to the current series */}
       {similarShows.length > 0 && (
         <section className="mx-auto max-w-7xl px-5 pb-12 sm:px-8">
           <h2 className="mb-6 text-2xl font-bold">Similar TV Series</h2>
@@ -555,7 +584,7 @@ export default function TVDetails() {
         </section>
       )}
 
-      {/* Watch Now modal */}
+      {/* Modal containing the trailer and streaming options */}
       {watchModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
@@ -568,6 +597,7 @@ export default function TVDetails() {
             className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-[#101827] p-5 shadow-2xl sm:p-7"
             onClick={(event) => event.stopPropagation()}
           >
+            {/* Close button for the modal */}
             <button
               onClick={() => setWatchModalOpen(false)}
               aria-label="Close watch options"
@@ -583,6 +613,7 @@ export default function TVDetails() {
               Trailer and viewing options available in India
             </p>
 
+            {/* Display a loading message or the available viewing options */}
             {watchLoading ? (
               <p className="py-10 text-center text-slate-300">
                 Loading watch options...
@@ -595,6 +626,7 @@ export default function TVDetails() {
                   </p>
                 )}
 
+                {/* Embedded YouTube trailer */}
                 {trailer && (
                   <section>
                     <h3 className="mb-3 text-lg font-semibold">
@@ -616,6 +648,7 @@ export default function TVDetails() {
                   </section>
                 )}
 
+                {/* Streaming, rental and purchase providers */}
                 {providerGroups.length > 0 && (
                   <section>
                     <h3 className="mb-3 text-lg font-semibold">
@@ -652,6 +685,7 @@ export default function TVDetails() {
                       ))}
                     </div>
 
+                    {/* Link to the provider's full availability information */}
                     {watchProviders?.link && (
                       <a
                         href={watchProviders.link}
@@ -671,6 +705,7 @@ export default function TVDetails() {
                   </section>
                 )}
 
+                {/* Fallback messages when trailer or providers are unavailable */}
                 {!trailer && providerGroups.length === 0 && (
                   <p className="rounded-xl border border-slate-700 bg-black/20 p-5 text-sm leading-6 text-slate-300">
                     No trailer or streaming providers are currently listed for
