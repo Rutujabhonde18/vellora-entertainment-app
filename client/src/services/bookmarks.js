@@ -1,7 +1,7 @@
-
 import { auth } from "../firebase";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 async function bookmarkRequest(path, options = {}) {
   const user = auth.currentUser;
@@ -42,8 +42,7 @@ export function addBookmark(item) {
 }
 
 export function removeBookmark(mediaType, tmdbId) {
-  return bookmarkRequest(
-    `/api/bookmarks/${mediaType}/${tmdbId}`,
-    { method: "DELETE" }
-  );
+  return bookmarkRequest(`/api/bookmarks/${mediaType}/${tmdbId}`, {
+    method: "DELETE",
+  });
 }
