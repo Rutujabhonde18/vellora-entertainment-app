@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, Sparkles, Film } from "lucide-react";
-import { searchMovies, searchTV, getImageUrl } from "../services/tmdb";
+import {
+  searchMovies,
+  searchTV,
+  getImageUrl,
+  discoverMoviesByGenre,
+} from "../services/tmdb";
 
 // Available moods and their related movie genres
 const moods = [
@@ -71,26 +76,12 @@ export default function MoodChatbot() {
       ]);
 
       // Fetch popular movies matching the selected genres
-      const token = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        accept: "application/json",
-      };
-
-      const requests = mood.genres.map((genre) =>
-        fetch(
-          `https://api.themoviedb.org/3/discover/movie?with_genres=${genre}&sort_by=popularity.desc&vote_count.gte=100&language=en-US&page=1&region=IN`,
-          { headers },
-        ).then((response) => {
-          if (!response.ok) throw new Error("Could not fetch recommendations.");
-          return response.json();
-        }),
+      const genreResults = await Promise.allSettled(
+        mood.genres.map((genre) => discoverMoviesByGenre(genre, "IN")),
       );
-
-      const genreResults = await Promise.allSettled(requests);
       const movies = genreResults
         .filter((result) => result.status === "fulfilled")
-        .flatMap((result) => result.value.results || []);
+        .flatMap((result) => result.value);
 
       // Remove duplicate movies and sort by popularity
       const uniqueMovies = Array.from(

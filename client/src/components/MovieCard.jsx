@@ -8,8 +8,7 @@ import {
   getBookmarks,
   removeBookmark,
 } from "../services/bookmarks";
-
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+import { getImageUrl } from "../services/tmdb";
 
 // Convert a title into a URL-friendly slug
 function createSlug(title = "") {
@@ -49,10 +48,7 @@ export default function MovieCard({
   const cardMediaType = media_type || mediaType || "movie";
   const tmdbId = Number(id);
 
-  const poster =
-    image ||
-    posterUrl ||
-    (poster_path ? `${IMAGE_BASE_URL}${poster_path}` : "");
+  const poster = image || posterUrl || getImageUrl(poster_path, "w500");
 
   const releaseYear =
     year ||

@@ -19,6 +19,7 @@ import {
   getImageUrl,
   getTVVideos,
   getTVWatchProviders,
+  getTVSeason,
 } from "../services/tmdb";
 import { toggleBookmark } from "../redux/bookmarkSlice";
 
@@ -131,22 +132,8 @@ export default function TVDetails() {
       setShowAllEpisodes(false);
 
       try {
-        // Request episodes for the selected season from TMDB
-        const response = await fetch(
-          `https://api.themoviedb.org/3/tv/${id}/season/${season}?language=en-US`,
-          {
-            headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_TMDB_ACCESS_TOKEN}`,
-              accept: "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Could not load episodes.");
-        }
-
-        const data = await response.json();
+        // Request episodes for the selected season
+        const data = await getTVSeason(id, season);
 
         if (!cancelled) {
           setEpisodes(data.episodes || []);

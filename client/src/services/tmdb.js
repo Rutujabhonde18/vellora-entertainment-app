@@ -1,8 +1,11 @@
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const ACCESS_TOKEN = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
+// All TMDB traffic goes through our own backend, because some ISPs
+// (e.g. Jio, Airtel) block api.themoviedb.org and image.tmdb.org directly.
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+).replace(/\/+$/, "");
 
-const BASE_URL = "https://api.themoviedb.org/3";
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
+const BASE_URL = `${API_BASE}/api/tmdb`;
+const IMAGE_PROXY_URL = `${API_BASE}/api/tmdb-image`;
 const CACHE_DURATION = 6 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT = 12000;
 const MAX_RETRIES = 2;
@@ -94,17 +97,14 @@ async function tmdbFetch(endpoint) {
 
   return fetchCached(`tmdb:${endpoint}`, () =>
     requestWithRetry(url, {
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
+      headers: { accept: "application/json" },
     }),
   );
 }
 
 // Generate a full image URL from an image path
 export function getImageUrl(path, size = "w500") {
-  return path ? `${IMAGE_BASE_URL}${size}${path}` : "";
+  return path ? `${IMAGE_PROXY_URL}/${size}${path}` : "";
 }
 
 // Fetch trending movies or TV shows from multiple pages
@@ -115,9 +115,7 @@ async function getTrending(type) {
     const results = [];
 
     for (const page of pages) {
-      const url =
-        `${BASE_URL}/trending/${type}/week` +
-        `?api_key=${API_KEY}&page=${page}`;
+      const url = `${BASE_URL}/trending/${type}/week?page=${page}`;
 
       const data = await requestWithRetry(url, {
         headers: { accept: "application/json" },
@@ -208,4 +206,26 @@ export async function getMovieWatchProviders(id, region = "IN") {
 export async function getTVWatchProviders(id, region = "IN") {
   const data = await tmdbFetch(`/tv/${id}/watch/providers`);
   return data.results?.[region] || null;
+}
+
+// Search movies and TV shows together
+export async function searchMulti(query) {
+  const data = await tmdbFetch(
+    `/search/multi?query=${encodeURIComponent(query)}&include_adult=false`,
+  );
+  return data.results || [];
+}
+
+// Get episodes for a TV season
+export function getTVSeason(id, season) {
+  return tmdbFetch(`/tv/${id}/season/${season}?language=en-US`);
+}
+
+// Discover popular movies for a genre
+export async function discoverMoviesByGenre(genre, region = "") {
+  const regionParam = region ? `&region=${region}` : "";
+  const data = await tmdbFetch(
+    `/discover/movie?with_genres=${genre}&sort_by=popularity.desc&vote_count.gte=100&language=en-US&page=1${regionParam}`,
+  );
+  return data.results || [];
 }

@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import MovieCard from "../components/MovieCard";
-
-// TMDB API configuration
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+import { searchMulti, getImageUrl } from "../services/tmdb";
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -28,35 +25,14 @@ const SearchResults = () => {
         return;
       }
 
-      // Check whether the TMDB API key is configured
-      if (!API_KEY) {
-        setError("TMDB API key is missing. Check your .env file.");
-        setResults([]);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError("");
 
       try {
-        // Build the TMDB multi-search request URL
-        const url = new URL("https://api.themoviedb.org/3/search/multi");
-        url.searchParams.set("api_key", API_KEY);
-        url.searchParams.set("query", searchQuery);
-        url.searchParams.set("include_adult", "false");
-
-        const response = await fetch(url);
-
-        // Handle unsuccessful API responses
-        if (!response.ok) {
-          throw new Error("Could not fetch search results. Please try again.");
-        }
-
-        const data = await response.json();
+        const found = await searchMulti(searchQuery);
 
         // Keep movies and TV series with posters and prepare their display data
-        const media = (data.results || [])
+        const media = (found || [])
           .filter(
             (item) =>
               (item.media_type === "movie" || item.media_type === "tv") &&
@@ -66,7 +42,7 @@ const SearchResults = () => {
             ...item,
             title: item.title || item.name || "Untitled",
             mediaType: item.media_type,
-            posterUrl: `${IMAGE_BASE_URL}${item.poster_path}`,
+            posterUrl: getImageUrl(item.poster_path, "w500"),
           }));
 
         setResults(media);

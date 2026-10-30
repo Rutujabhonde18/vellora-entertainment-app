@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, Sparkles, X, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { discoverMoviesByGenre, getImageUrl } from "../services/tmdb";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
@@ -45,28 +46,8 @@ const SearchBar = () => {
     setLoading(true);
 
     try {
-      const token = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
-
-      if (!token) {
-        throw new Error("TMDB access token is missing.");
-      }
-
       const results = await Promise.all(
-        mood.genres.map(async (genre) => {
-          const response = await fetch(
-            `https://api.themoviedb.org/3/discover/movie?with_genres=${genre}&sort_by=popularity.desc&vote_count.gte=100&language=en-US&page=1`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                accept: "application/json",
-              },
-            },
-          );
-
-          if (!response.ok) throw new Error("TMDB request failed.");
-          const data = await response.json();
-          return data.results || [];
-        }),
+        mood.genres.map((genre) => discoverMoviesByGenre(genre)),
       );
 
       // Remove duplicate movies and sort by popularity
@@ -107,8 +88,7 @@ const SearchBar = () => {
   };
 
   // Generate a movie poster URL
-  const imageUrl = (path) =>
-    path ? `https://image.tmdb.org/t/p/w342${path}` : null;
+  const imageUrl = (path) => getImageUrl(path, "w342") || null;
 
   return (
     <div className="relative flex w-full min-w-0 items-center gap-3 bg-transparent px-0 py-0 md:fixed md:left-64 md:right-0 md:top-0 md:z-40 md:w-auto md:border-b md:border-slate-700/70 md:bg-[#080d1a] md:px-5 md:py-4">

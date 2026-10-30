@@ -23,9 +23,6 @@ import {
   getMovieWatchProviders,
 } from "../services/tmdb";
 
-const PROFILE_BASE_URL = "https://image.tmdb.org/t/p/w185";
-const BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/w1280";
-
 export default function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -224,7 +221,7 @@ export default function MovieDetails() {
       <section className="relative isolate min-h-560px overflow-hidden md:mt-16">
         {movie.backdrop_path && (
           <img
-            src={`${BACKDROP_BASE_URL}${movie.backdrop_path}`}
+            src={getImageUrl(movie.backdrop_path, "w1280")}
             alt=""
             className="absolute inset-0 -z-20 h-full w-full object-cover"
           />
@@ -351,7 +348,7 @@ export default function MovieDetails() {
               >
                 {person.profile_path ? (
                   <img
-                    src={`${PROFILE_BASE_URL}${person.profile_path}`}
+                    src={getImageUrl(person.profile_path, "w185")}
                     alt={person.name}
                     loading="lazy"
                     className="h-40 w-full object-cover"
