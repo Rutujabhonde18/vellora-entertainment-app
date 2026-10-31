@@ -112,7 +112,7 @@ export default function Login() {
     try {
       await sendPasswordResetEmail(auth, email);
       setMessage(
-        "If an account exists for this email, a password reset email has been sent.",
+        "If an account exists for this email, a password reset email has been sent. If you don't see it, please check your Spam or Promotions folder.",
       );
     } catch (err) {
       if (

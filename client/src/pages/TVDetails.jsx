@@ -9,7 +9,6 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "../components/SearchBar";
 import MovieCard from "../components/MovieCard";
 import {
@@ -21,12 +20,11 @@ import {
   getTVWatchProviders,
   getTVSeason,
 } from "../services/tmdb";
-import { toggleBookmark } from "../redux/bookmarkSlice";
+import useBookmark from "../hooks/useBookmark";
 
 export default function TVDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [season, setSeason] = useState(1);
   const [show, setShow] = useState(null);
@@ -45,8 +43,18 @@ export default function TVDetails() {
   const [watchLoading, setWatchLoading] = useState(false);
   const [watchError, setWatchError] = useState("");
 
-  // Get saved bookmarks from Redux
-  const bookmarks = useSelector((state) => state.bookmarks);
+  // Bookmark state is stored on the backend (same data as the Bookmarks page)
+  const {
+    isBookmarked,
+    toggle: toggleBookmark,
+    busy: bookmarkBusy,
+    error: bookmarkError,
+  } = useBookmark({
+    tmdbId: id,
+    mediaType: "tv",
+    title: show?.name || show?.title,
+    posterPath: show?.poster_path,
+  });
 
   // Load series details, cast and similar series
   useEffect(() => {
@@ -251,23 +259,6 @@ export default function TVDetails() {
   const image = getImageUrl(show.poster_path);
   const backdrop = getImageUrl(show.backdrop_path, "w1280");
 
-  // Check whether this series is already bookmarked
-  const isBookmarked = bookmarks.some(
-    (item) => String(item.id) === String(show.id) && item.mediaType === "tv",
-  );
-
-  // Prepare the series data to save or remove from bookmarks
-  const bookmarkItem = {
-    id: show.id,
-    title,
-    name: title,
-    mediaType: "tv",
-    image,
-    year,
-    rating,
-    genre: "TV Series",
-  };
-
   // Get all regular seasons, excluding specials
   const availableSeasons =
     show.seasons?.filter((item) => item.season_number > 0) || [];
@@ -391,7 +382,8 @@ export default function TVDetails() {
               </button>
 
               <button
-                onClick={() => dispatch(toggleBookmark(bookmarkItem))}
+                onClick={toggleBookmark}
+                disabled={bookmarkBusy}
                 className="flex items-center cursor-pointer gap-2 rounded-full border border-slate-600 bg-black/20 px-4 py-3 text-sm font-semibold transition hover:border-violet-400 hover:bg-violet-500/10 active:scale-95"
               >
                 <Bookmark
@@ -401,6 +393,10 @@ export default function TVDetails() {
                 {isBookmarked ? "Remove Bookmark" : "Add to Bookmark"}
               </button>
             </div>
+
+            {bookmarkError && (
+              <p className="mt-3 text-sm text-red-300">{bookmarkError}</p>
+            )}
 
             {/* Buttons for selecting a season */}
             {availableSeasons.length > 0 && (

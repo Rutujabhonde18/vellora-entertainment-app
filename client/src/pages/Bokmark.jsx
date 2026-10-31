@@ -20,7 +20,7 @@ export default function Bookmarks() {
         setError("");
 
         // Fetch saved bookmarks from the backend
-        const response = await getBookmarks();
+        const response = await getBookmarks({ force: true });
         const saved = response.bookmarks || [];
 
         // Display saved items immediately using backend data

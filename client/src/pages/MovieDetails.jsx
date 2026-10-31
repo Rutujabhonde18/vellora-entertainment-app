@@ -10,10 +10,9 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "../components/SearchBar";
 import MovieCard from "../components/MovieCard";
-import { toggleBookmark } from "../redux/bookmarkSlice";
+import useBookmark from "../hooks/useBookmark";
 import {
   getMovieDetails,
   getMovieCredits,
@@ -26,8 +25,6 @@ import {
 export default function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const bookmarks = useSelector((state) => state.bookmarks);
 
   const [movie, setMovie] = useState(null);
   const [cast, setCast] = useState([]);
@@ -167,13 +164,18 @@ export default function MovieDetails() {
     }
   }
 
-  // Check whether the movie is already bookmarked
-  const isBookmarked = movie
-    ? bookmarks.some(
-        (item) =>
-          String(item.id) === String(movie.id) && item.mediaType === "movie",
-      )
-    : false;
+  // Bookmark state is stored on the backend (same data as the Bookmarks page)
+  const {
+    isBookmarked,
+    toggle: toggleBookmark,
+    busy: bookmarkBusy,
+    error: bookmarkError,
+  } = useBookmark({
+    tmdbId: id,
+    mediaType: "movie",
+    title: movie?.title,
+    posterPath: movie?.poster_path,
+  });
 
   // Show a loading message while movie details are fetched
   if (loading) {
@@ -304,20 +306,8 @@ export default function MovieDetails() {
                 </button>
 
                 <button
-                  onClick={() =>
-                    dispatch(
-                      toggleBookmark({
-                        id: movie.id,
-                        title: movie.title,
-                        year: movie.year,
-                        genre: movie.genres.map((g) => g.name).join(", "),
-                        image: movie.image,
-                        rating: movie.rating,
-                        overview: movie.overview,
-                        mediaType: "movie",
-                      }),
-                    )
-                  }
+                  onClick={toggleBookmark}
+                  disabled={bookmarkBusy}
                   className="flex cursor-pointer items-center gap-2 rounded-full border border-white/20 bg-black/20 px-4 py-3 text-sm font-semibold transition hover:border-violet-400 hover:bg-white/10"
                 >
                   <Bookmark
@@ -327,6 +317,10 @@ export default function MovieDetails() {
                   {isBookmarked ? "Remove Bookmark" : "Add to Bookmark"}
                 </button>
               </div>
+
+              {bookmarkError && (
+                <p className="mt-3 text-sm text-red-300">{bookmarkError}</p>
+              )}
             </div>
           </div>
         </div>
