@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useAuth } from "../context/AuthContext";
 import {
   addBookmark,
@@ -34,9 +33,6 @@ export default function MovieCard({
 }) {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-
-  // Use Redux bookmarks as a fallback for logged-out users
-  const reduxBookmarks = useSelector((state) => state.bookmarks || []);
 
   const [serverBookmarks, setServerBookmarks] = useState([]);
   const [loadedUserId, setLoadedUserId] = useState(null);
@@ -86,7 +82,7 @@ export default function MovieCard({
     };
   }, [user, authLoading]);
 
-  // Check whether the current item is bookmarked
+  // Bookmarks belong to the logged-in user, so nothing is bookmarked when logged out
   const isBookmarked = user
     ? loadedUserId === user.uid &&
       serverBookmarks.some(
@@ -94,11 +90,7 @@ export default function MovieCard({
           Number(bookmark.tmdbId) === tmdbId &&
           bookmark.mediaType === cardMediaType,
       )
-    : reduxBookmarks.some(
-        (bookmark) =>
-          (bookmark.tmdbId ?? bookmark.id) === id &&
-          bookmark.mediaType === cardMediaType,
-      );
+    : false;
 
   // Prepare bookmark data
   const item = {
